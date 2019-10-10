@@ -1,0 +1,15 @@
+不同版本的eclipse对jdk版本要求不一样，最高支持tomcat版本也不一样，以下对应关系本人亲自下载eclipse验证过，可放心使用。
+?
+
+
+Eclipse 4.8 (Photon)--------Java8--------Tomcat9.0
+
+Eclipse 4.7 (Oxygen)--------Java8--------Tomcat9.0
+
+Eclipse 4.6 (Neon)-----------Java8-------Tomcat9.0
+
+Eclipse 4.5 (Mars)-----------Java7---------Tomcat8.0
+
+Eclipse 4.4 (Luna)-----------Java7--------Tomcat8.0
+
+Eclipse 4.3 (Kepler)---------Java6--------Tomcat7.0

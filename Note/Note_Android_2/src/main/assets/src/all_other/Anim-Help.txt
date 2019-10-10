@@ -1,0 +1,184 @@
+Android 平台提供了两类动画。 一类是Tween动画，就是对场景里的对象不断的进行图像变化来产生动画效果（旋转、平移、放缩和渐变）。 
+
+http://www.androidchina.net/3303.html
+
+一、AlphaAnimation 
+----------------------------------------------
+定义：透明度动画效果
+功能：设置透明度渐变动画
+
+用例：
+	AlphaAnimation animation = new AlphaAnimation(1, 0); 
+	animation.setDuration(2000);				//设置动画持续时间 
+	animation.setRepeatCount(int repeatCount);	//设置重复次数 
+	animation.setFillAfter(boolean);			//动画执行完后是否停留在执行完的状态 
+	animation.setStartOffset(long startOffset);	//执行前的等待时间 
+	animation.startNow(); 				// 开始动画
+	
+	view.setAnimation(animation);		// 设置组件动画
+	view.startAnimation(animation);		// 开始动画
+	
+	
+
+二、ScaleAnimation 
+----------------------------------------------
+定义：缩放动画效果
+功能：设置缩放动画 
+
+ScaleAnimation(float fromX, float toX, float fromY, float toY,int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) 
+属性：
+	float fromX 	动画起始时X坐标上的伸缩尺寸(0~无限大) 
+	float toX 		动画结束时X坐标上的伸缩尺寸 
+	float fromY 	动画起始时Y坐标上的伸缩尺寸 
+	float toY 		动画结束时Y坐标上的伸缩尺寸 
+	int pivotXType 	动画在X轴相对于物件位置类型 
+	float pivotXValue 	动画相对于物件的X坐标的开始位置 
+	int pivotYType 		动画在Y轴相对于物件位置类型 
+	float pivotYValue 	动画相对于物件的Y坐标的开始位置 
+	
+Animation.RELATIVE_TO_SELF		相对于自身
+Animation.RELATIVE_TO_PARENT	相对于父控件(容器)
+Animation.ABSOLUTE				那么对应的值应该是具体的坐标值，比如100到300，指绝对的屏幕像素单位
+
+用例：
+	final ScaleAnimation animation = new ScaleAnimation(0.0f, 1.4f, 0.0f, 1.4f, 
+	Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f); 
+	
+	animation.setDuration(2000);					// 设置动画持续时间 
+	animation.setRepeatCount(int repeatCount);		// 设置重复次数 
+	animation.setFillAfter(boolean);				// 动画执行完后是否停留在执行完的状态 
+	animation.setStartOffset(long startOffset);		// 执行前的等待时间 
+
+
+三、TranslateAnimation
+----------------------------------------------
+定义：位移动画效果 
+功能：设置位移动画效果
+
+TranslateAnimation(float fromXDelta, float toXDelta, float fromYDelta, float toYDelta) 
+属性：
+	float fromXDelta 	动画开始的点离当前View X坐标上的差值 
+	float toXDelta 		动画结束的点离当前View X坐标上的差值 
+	float fromYDelta 	动画开始的点离当前View Y坐标上的差值 
+	float toYDelta 		动画开始的点离当前View Y坐标上的差值 
+
+用例：
+	TranslateAnimation animation = new TranslateAnimation(0, 150, 0, 0); 
+	animation.setDuration(2000);		//设置动画持续时间 
+	animation.setRepeatCount(2);		//设置重复次数 
+	animation.setRepeatMode(Animation.REVERSE);	//设置反方向执行 
+	
+
+四、RotateAnimation
+----------------------------------------------
+定义：旋转动画效果
+功能：设置选择动画效果
+
+RotateAnimation (float fromDegrees, float toDegrees, int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) 
+属性：
+	float fromDegrees：	旋转的开始角度。 
+	float toDegrees：	旋转的结束角度。 
+	int pivotXType：		X轴的伸缩模式，可以取值为ABSOLUTE、RELATIVE_TO_SELF、RELATIVE_TO_PARENT。
+	float pivotXValue：	X坐标的伸缩值。 
+	int pivotYType：		Y轴的伸缩模式，可以取值为ABSOLUTE、RELATIVE_TO_SELF、RELATIVE_TO_PARENT。
+	float pivotYValue：	Y坐标的伸缩值。
+	
+用例：
+	RotateAnimation animation =new RotateAnimation(0f,360f,Animation.RELATIVE_TO_SELF, 
+			0.5f,Animation.RELATIVE_TO_SELF,0.5f); 
+	animation.setDuration(3000);				// 设置动画持续时间 
+	animation.setRepeatCount(int repeatCount);	// 设置重复次数 
+	animation.setFillAfter(boolean);			// 动画执行完后是否停留在执行完的状态 
+	animation.setStartOffset(long startOffset);	// 执行前的等待时间 
+	
+	
+五、AnimationSet 动画集 
+----------------------------------------------
+定义：
+
+用例：
+	AnimationSet animationSet=new AnimationSet(true); 
+	TranslateAnimation mTranslateAnim=new TranslateAnimation(
+	Animation.RELATIVE_TO_SELF, 0f, 	// X轴的开始位置 
+	Animation.RELATIVE_TO_SELF, 0.5f, 	// X轴的结束位置 
+	Animation.RELATIVE_TO_SELF, 0f, 	// Y轴的开始位置 
+	Animation.RELATIVE_TO_SELF, 1.0f); 	// Y轴的结束位置 
+	mTranslateAnim.setDuration(2000);
+	animationSet.addAnimation(mTranslateAnim);
+	
+
+
+六、重要方法：
+----------------------------------------------
+	1. public void setRepeatMode (int repeatMode)
+	
+功能说明:
+	该方法用于设置一个动画效果执行的重复模式。Android系统中提供了几种重复模式，其中最主要的便是RESTART模式和REVERSE模式。
+	
+参数取值:
+	Animation.RESTART：重新从头开始执行。
+	Animation.REVERSE：反方向执行。
+	
+	
+七、Interpolator
+----------------------------------------------
+	定义：被用来修饰动画效果，定义动画的变化率，可以使存在的动画效果accelerated(加速)，decelerated(减速),repeated(重复),bounced(弹跳)等。
+
+子类：
+	AccelerateDecelerateInterpolator 在动画开始与结束的地方速率改变比较慢，在中间的时候加速
+  	AccelerateInterpolator  	在动画开始的地方速率改变比较慢，然后开始加速
+ 	AnticipateInterpolator 		开始的时候向后然后向前甩
+  	AnticipateOvershootInterpolator 开始的时候向后然后向前甩一定值后返回最后的值
+  	BounceInterpolator   	动画结束的时候弹起
+  	CycleInterpolator		动画循环播放特定的次数，速率改变沿着正弦曲线
+  	DecelerateInterpolator 	在动画开始的地方快然后慢
+  	LinearInterpolator   	以常量速率改变
+  	OvershootInterpolator   向前甩一定值后再回到原来位置
+  	
+  	
+ 8、属性一览表
+ ----------------------------------------------
+android:detachWallpaper		setDetachWallpaper(boolean)		是否在壁纸上运行
+android:duration			setDuration(long)				动画持续时间，毫秒为单位
+android:fillAfter			setFillAfter(boolean)			控件动画结束时是否保持动画最后的状态
+android:fillBefore			setFillBefore(boolean)			控件动画结束时是否还原到开始动画前的状态
+android:fillEnabled			setFillEnabled(boolean)			与android:fillBefore效果相同
+android:interpolator		setInterpolator(Interpolator)	设定插值器（指定的动画效果，譬如回弹等）
+android:repeatCount			setRepeatCount(int)				重复次数
+android:repeatMode			setRepeatMode(int)				重复类型有两个值，reverse表示倒序回放，restart表示从头播放
+android:startOffset			setStartOffset(long)			调用start函数之后等待开始运行的时间，单位为毫秒
+android:zAdjustment			setZAdjustment(int)				表示被设置动画的内容运行时在Z轴上的位置（top/bottom/normal），默认为normal
+
+
+
+
+一些参考资料
+--------------------------------------------------------------------------------------------------------------------------------
+这个网格听起来很傻，但我可以吨找到任何ยด如何指定ScaleTAnimation的pivotXType和pivotYType。 我知道如何以编程方式做到这一点，但我需要通过XML指定它（我需要它的活动之间的过渡，使用 这里ยดs表示作品引脚：
+ Animation animation=new ScaleAnimation(1,0,1,0,ScaleAnimation.RELATIVE_TO_SELF,(float)0.5,ScaleAnimation.RELATIVE_TO_SELF,(float)0.5); 
+ animation.setDuration(1000);
+这里ยดS中的XML，没有属性的XML我ยด我想找
+<?xml version="1.0" encoding="utf-8"?>
+<scale xmlns:android=" CodeGo.net 
+ android:fromXScale="1"
+ android:toXScale="0"
+ android:fromYScale="1"
+ android:toYScale="0"
+ android:pivotX="0.5"  
+ android:pivotY="0.5"
+ android:duration="2000"
+ />
+我检查了在巴茨ยดdidn吨找到任何答案。 谢谢。 +
+本文地址 ：CodeGo.net/241067/ 
+------------------------------------------------------------------------------------------------------------------------- 
+1. 希望没有人甚至懒得看我的问题。 当我犯了一个错误写入XML，这里ยดS中正确的针，我想（缩放新活动从100％到0％，大小，就在屏幕的中间）的效果。 为pivotX和pivotY正确的值是50％，而不是0.5。
+<?xml version="1.0" encoding="utf-8"?>
+<scale xmlns:android=" CodeGo.net 
+ android:fromXScale="1"
+ android:toXScale="0"
+ android:fromYScale="1"
+ android:toYScale="0"
+ android:pivotX="50%"  
+ android:pivotY="50%"
+ android:duration="600"
+ />

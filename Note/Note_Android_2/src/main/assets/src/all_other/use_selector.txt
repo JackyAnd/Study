@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:state_focused="true"  <!-- true非触摸模式下获得焦点时显示图片-->
+android:state_window_focused="true"  <!--true，当此activity获得焦点在最前面时显示该图片；false，当没在最前面时显示该图片。 -->
+android:state_enabled="true" <!--true，当该组件能使用时显示该图片；false，当该组件不能使用时显示该图片。 -->
+android:state_checkable="true" <!--true，当CheckBox能使用时显示该图片；false，当CheckBox不能使用时显示该图片 -->
+android:state_checked="true" <!-- true，当CheckBox选中时显示该图片；false，当CheckBox为未选中时显示该图片-->
+android:state_selected="true" <!--true 选择时显示的图片；false 为选择时的图片（例如用在Tab) -->
+android:state_pressed="true" <!-- true，当被点击时显示该图片；false没被按下时显示图片 ==click-->                                                                    <!--多用于ListView或者切换 -->
+android:state_activated="true" <!--true 被激活时显示图片  ；false未激活时图片-->
+android:state_active="true" <!-- -->
+android:state_single="true" <!-- true 只有一个元素显示图片-->
+android:state_first="true" <!-- -->
+android:state_middle="true" <!-- -->
+android:state_last="true" <!-- -->
+android:state_accelerated="true" <!--true 硬件加速为true的图片 -->
+android:state_hovered="true" <!-- true 鼠标（指针）移动到该位置时图片-->
+android:state_drag_hovered="true"<!-- true 能够drop 或者 drag 鼠标指针移动到该位置图片-->
+ android:state_drag_can_accept="true" <!--true 能够dorp 或者 drag 时图片-->
+android:state_accessibility_focused="true" <!-- -->
+android:drawable="@drawable/icon"<!-- （一般）必备  上文的图片-->
+ />
+  </selector>

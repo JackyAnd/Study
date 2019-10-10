@@ -1,0 +1,29 @@
+关于Android Studio中点9图的编译错误问题:Some file crunching failed
+标签： androidandroid studioapp图片
+2017-06-26 09:36 434人阅读 评论(0) 收藏 举报
+ 分类： Android（8）
+原文地址：http://www.jianshu.com/p/cb3db3a0bd0d
+
+Android中的点9图想必大家都非常熟悉了，能够指定背景图片的缩放区域和文本内容的显示区域，常见如QQ聊天界面的背景气泡这种文本内容不固定并需要适配的应用场景。
+
+以前在使用Eclipse时候很少会出现点9图的编译错误问题，但是在转向Android Studio的过程中，你可能会遇到。比如你将Eclipse项目转化为Android Studio项目，或者在自己的项目中引入点9图，然后Clean编译，结果在Messages控台中出现了如下错误提示：
+
+Error:Execution failed for task ':app:mergeDebugResources'.
+>Some file crunching failed, see logs for details crunching failed，
+1
+2
+根据错误信息，只能看出某些文件计算失败，如果不知道这里面的道道，还真找不到错误的根源。其实，这里就是点9图在Android Studio中的使用出现了问题。
+
+Android Studio对点9图的规范要求十分严格，控制缩放区域和内容区域的四边黑线一条都不能少，如果缺少一条，就会出现上述错误。
+
+Android Studio内嵌了SDK中的draw9Patch工具，可以直接打开点9图并编辑预览，只需要将引入的点9图四边黑线按要求补全，然后重新Clean一下，上述错误就不会出现了。
+
+虽然在布局文件中，仍然会出现代码红色错误提示，但却不会影响正常编译运行。当然有强迫症的我对于这一点表示很纠结，如果大家有什么解决办法一定要留言告之，不胜感激。
+
+补充一点，关于在Android Studio中点9图不规范的编译错误问题，网上也提供了另外一种解决方案，打开项目module目录下build.gradle文件，在buildToolsVersion语句下面添加如下两行代码：
+
+aaptOptions.cruncherEnabled = false
+aaptOptions.useNewCruncher = false
+1
+2
+但是经过测试验证，除了错误信息提示变得更加清晰，并自动定位和打开错误图片之外，还是不能绕过编译这一关，仍然需要修改点9图片，补全点9图的四边黑线，不知大家有没有尝试过呢，欢迎交流讨论。

@@ -1,0 +1,180 @@
+一、AudioRecord 介绍
+-----------------------------------
+    android.media.AudioRecord
+
+    1. 构造器
+        public AudioRecord (int audioSource, int sampleRateInHz, int channelConfig, int audioFormat, int bufferSizeInBytes)
+
+    1.1 Parameters 详情
+        audioSource     : 音频源, 指的是从哪里采集音频。这里我们当然是从麦克风采集音频，所以此参数的值为MIC;
+                         the sample rate expressed in Hertz. Examples of rates are (but not limited to) 44100, 22050 and 11025.
+                         
+        sampleRateInHz  : 采样率, 音频的采样频率，每秒钟能够采样的次数，采样率越高，音质越高。给出的实例是44100、22050、11025但不限于这几个参数。
+                                                    例如要采集低质量的音频就可以使用4000、8000等低采样率。
+                          describes the configuration of the audio channels. See CHANNEL_IN_MONO and CHANNEL_IN_STEREO
+                          
+        channelConfig   : 声道设置, Android支持双声道立体声和单声道。MONO单声道，STEREO立体声
+                          the format in which the audio data is represented. See ENCODING_PCM_16BIT and ENCODING_PCM_8BIT
+        
+        audioFormat     : 编码制式和采样大小, 采集来的数据当然使用PCM编码(脉冲代码调制编码，即PCM编码。PCM通过抽样、量化、编码三个步骤将连续变化的模拟信号转换为数字编码). 
+                          android支持的采样大小16bit 或者8bit。当然采样大小越大，那么信息量越多，音质也越高，现在主流的采样大小都是16bit，在低质量的语音传输的时候8bit足够了。
+                          the total size (in bytes) of the buffer where audio data is written to during the recording. New audio data can be read from this buffer 
+                          in smaller chunks than this size. 
+                          SeegetMinBufferSize(int, int, int) to determine the minimum required buffer size for the successful creation of an AudioRecord instance. 
+                          Using values smaller than getMinBufferSize() will ret in an initialization failure.
+                          
+    bufferSizeInBytes   : 采集数据需要的缓冲区的大小，如果不知道最小需要的大小可以在getMinBufferSize()查看。
+                                                    采集到的数据保存在一个byteBuffer中，可以使用流将其读出。亦可保存成为文件的形式。
+ 
+
+二、AudioTrack 介绍
+-----------------------------------
+    android.media.AudioTrack
+    
+    1. 构造器
+       public AudioTrack(int streamType, int sampleRateInHz, int channelConfig, int audioFormat, int bufferSizeInBytes, int mode)
+
+    1.1 Parameters 详情
+        streamType      ：the type of the audio stream. See STREAM_VOICE_CALL, STREAM_SYSTEM, STREAM_RING, STREAM_MUSIC and STREAM_ALARM
+        sampleRateInHz  ：the sample rate expressed in Hertz. Examples of rates are (but not limited to) 44100, 22050 and 11025.
+        channelConfig   ：describes the configuration of the audio channels. See CHANNEL_OUT_MONO and CHANNEL_OUT_STEREO
+        audioFormat     ：the format in which the audio data is represented. See ENCODING_PCM_16BIT and ENCODING_PCM_8BIT
+      bufferSizeInBytes ：the total size (in bytes) of the buffer where audio data is read from for playback. 
+                          If using the AudioTrack in streaming mode, you can write data into this buffer in smaller chunks than this size. 
+                          If using the AudioTrack in static mode, this is the maximum size of the sound that will be played for this instance.
+                          See getMinBufferSize(int, int, int) to determine the minimum required buffer size for the successful creation of an AudioTrack instance in streaming mode. 
+                          Using values smaller than getMinBufferSize() will ret in an initialization failure.
+                   mode ：streaming or static buffer. See MODE_STATIC and MODE_STREAM
+
+ 
+    2.应用
+            使用这个类可以很强轻松地将音频数据在Android系统上播放出来，下面贴出我自己写的源码：
+      ---------------------------------------------------------------------------------------------------------------------
+      AudioTrack audio = new AudioTrack(
+        AudioManager.STREAM_MUSIC,       // 指定在流的类型
+        32000,                           // 设置音频数据的采样率 32k，如果是44.1k就是44100
+        AudioFormat.CHANNEL_OUT_STEREO,  // 设置输出声道为双声道立体声，而CHANNEL_OUT_MONO类型是单声道
+        AudioFormat.ENCODING_PCM_16BIT,  // 设置音频数据块是8位还是16位，这里设置为16位。好像现在绝大多数的音频都是16位的了
+        AudioTrack.MODE_STREAM           // 设置模式类型，在这里设置为流类型，另外一种MODE_STATIC貌似没有什么效果
+      );
+      audio.play(); // 启动音频设备，下面就可以真正开始音频数据的播放了
+      
+      // 打开mp3文件，读取数据，解码等操作省略 ...
+      byte[] buffer = new buffer[4096];
+      int count;
+      while(true) {
+        // 最关键的是将解码后的数据，从缓冲区写入到AudioTrack对象中
+        audio.write(buffer, 0, 4096);
+        if(文件结束) break;
+      }
+      // 最后别忘了关闭并释放资源
+      audio.stop();
+      audio.release();
+      ---------------------------------------------------------------------------------------------------------------------
+      
+ 
+ 三、SoundPool 简介
+ -----------------------------------
+    android.media.SoundPool
+    
+        作用： 一般大家使用的是MediaPlayer来播放音频，它的创建和销毁都是非常消耗资源的，
+                    如果我们的需求是播放一些短促而且频繁播放的音频的话MediaPlayer就有些不合适了，我们来讲讲SoundPool来播放短促的音频。
+                    
+    1. 构造器
+       public SoundPool (int maxStreams, int streamType, int srcQuality);    
+       
+    1.1 Parameters 详情
+        maxStreams : 最大的流的数量
+        streamType : 流的类型(看下图)建议AudioManager.STREAM_SYSTEM
+        srcQuality : 频的质量，默认是0，目前没有影响 
+        
+    2. 加载音频方法: load()
+              在load方法中我们一般是把音频文件放到res的raw文件夹下, 然后使用load(Context context, int resId, int priority)方法来加载音频到SoundPool中;
+       
+       2.1 Parameters 详情
+           context  : 上下文
+           resId    : 音频文件的地址：R.raw.deep
+           priority : 优先级：都是短促音频无影响设置为1即可
+    
+    3. 播放音频方法: play()
+              播放音频比较简单，使用play(int soundID, float leftVolume, float rightVolume, int priority, int loop, float rate)
+                
+       3.1 Parameters 详情
+           soundID      : 声音的id(即：load到SoundPool的顺序，从1开始)
+           leftVolume   : 左声道的音量控制, 0.0 到 1.0
+           rightVolume  : 右声道的音量控制, 0.0 到 1.0
+           priority     : 优先级，0是最低优先级
+           loop         : 是否循环播放，0为不循环，-1为循环
+           rate         : 播放比率，从0.5到2，一般为1，表示正常播放
+           
+     4.1 应用示例: 播放一个音频的所需代码如下
+         --------------------------------------------------------------------------
+         // 初始化 SoundPool
+         SoundPool soundPool= new SoundPool(10, AudioManager.STREAM_SYSTEM, 5);
+         // 加载 deep 音频文件 
+         soundPool.load(this, R.raw.deep, 1); 
+         // 播放 deep 
+         soundPool.play(1, 1, 1, 0, 0, 1);
+         --------------------------------------------------------------------------
+     
+     4.2 应用示例: 播放多个音频的所需代码如下
+         --------------------------------------------------------------------------
+         public class SoundPlayUtils {     
+            
+            // SoundPool对象     
+            public static SoundPool mSoundPlayer = new SoundPool(10, AudioManager.STREAM_SYSTEM, 5);     
+            public static SoundPlayUtils soundPlayUtils;     
+            static Context mContext;
+            
+            public static SoundPlayUtils init(Context context) {         
+                if (soundPlayUtils == null) {             
+                    soundPlayUtils = new SoundPlayUtils();         
+                }   
+                       
+                // 初始化声音         
+                mContext = context;          
+                mSoundPlayer.load(mContext, R.raw.beng, 1);     // 1
+                mSoundPlayer.load(mContext, R.raw.click, 1);    // 2
+                mSoundPlayer.load(mContext, R.raw.diang, 1);    // 3
+                mSoundPlayer.load(mContext, R.raw.ding, 1);     // 4
+                mSoundPlayer.load(mContext, R.raw.gone, 1);     // 5
+                mSoundPlayer.load(mContext, R.raw.popup, 1);    // 6
+                mSoundPlayer.load(mContext, R.raw.water, 1);    // 7
+                mSoundPlayer.load(mContext, R.raw.ying, 1);     // 8
+                
+                return soundPlayUtils;     
+            }
+            
+            public static void play(int soundID) {         
+                mSoundPlayer.play(soundID, 1, 1, 0, 0, 1);     
+            }
+         }
+         
+                  第一步：在程序入口的Activity的onCreate方法中添加如下代码：
+              // 初始化音效 SoundPlayUtils.init(this);
+                   
+                  第二步：在任何地方播放时，直接使用如下代码：
+                            播放 beng
+              // 播放声音 SoundPlayUtils.play(1);
+                           
+                            播放 water
+              // 播放声音 SoundPlayUtils.play(7);
+         --------------------------------------------------------------------------
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+ 

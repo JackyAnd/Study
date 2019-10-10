@@ -1,0 +1,71 @@
+http://www.360doc.com/content/14/0610/21/16623487_385518125.shtml
+
+// 矩形图片变成梯形
+http://bbs.csdn.net/topics/110178542
+http://www.eoeandroid.com/thread-245708-1-1.html?_dsign=c9b559b8
+http://blog.csdn.net/lmj623565791/article/details/44278417
+
+最近需要使用梯形的图片，网上找了一些资料，总结了一下，听到图形变化都会想到matrix，我是用matrix的setPolytoPoly函数，将图片变形成梯形。关于 .Matrix.setPolyToPoly(float[] src, int srcIndex, float[] dst, int dstIndex, int pointCount)；的具体效果也弄清楚了，这里跟大家分享一下。
+       先上效果图：
+
+
+
+       [mw_shl_code=java,true]
+float[] src = new float[] { 0, 0,         //左上
+
+
+
+
+
+                                       bitmap.getWidth(), 0,//右上
+                                       bitmap.getWidth(), bitmap.getHeight(),//右下
+                                        0, bitmap.getHeight() };//左下
+float[] dst = new float[] { 0, 0,
+                                        bitmap.getWidth(), 30,
+                                        bitmap.getWidth(), bitmap.getHeight()-30,
+                                        0, bitmap.getHeight() };
+                        Matrix mMatrix = new Matrix();
+                        mMatrix.setPolyToPoly(src, 0, dst, 0, src.length >> 1);[/mw_shl_code]
+       其中 src 与 dst 两个float[]数组的值都是坐标点，其中包括了四个点，分别是左上，右上，右下，左下四个点。setPolyToPoly 则是调整这四个点，使其进行变形 ，src是表示的是源，dst表示的是目的，即将源点放入到目的点中进行拉伸。 这四个点的坐标可以任意变动，不一定要是图片的四个顶点。这个读者可以自己去试。我这里的效果只限于左大右小，梯形的朝向也可以根据src与dst变动。下面是源码。
+[mw_shl_code=java,true]
+package com.bluzee.test;
+
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.os.Bundle;
+import android.view.View;
+
+public class TestActivity extends Activity {
+        public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  setContentView(new MyView(this));
+        }
+
+         class MyView extends View {
+                  private Bitmap bitmap;
+                  public MyView(Context context) {
+                           super(context);
+                           bitmap = BitmapFactory.decodeResource(context.getResources(),
+                                                       R.drawable.test);
+                  }
+                  @Override
+                  protected void onDraw(Canvas canvas) {
+                           float[] src = new float[] { 0, 0,         //左上
+                                                              bitmap.getWidth(), 0,//右上
+                                                                  bitmap.getWidth(), bitmap.getHeight(),//右下
+                                                                  0, bitmap.getHeight() };//左下
+                            float[] dst = new float[] { 0, 0,
+                                                                  bitmap.getWidth(), 30,
+                                                                  bitmap.getWidth(), bitmap.getHeight()-30,
+                                                                  0, bitmap.getHeight() };
+                           Matrix mMatrix = new Matrix();
+                           mMatrix.setPolyToPoly(src, 0, dst, 0, src.length >> 1);
+                           canvas.drawBitmap(bitmap, mMatrix, null);
+                           canvas.drawBitmap(bitmap, 0, bitmap.getHeight(), null);
+                  }
+         }
+}[/mw_shl_code]

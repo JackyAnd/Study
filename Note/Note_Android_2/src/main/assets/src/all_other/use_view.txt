@@ -1,0 +1,301 @@
+一、Android View 生命周期的主要方法
+http://www.cnblogs.com/linjzong/p/4191891.html
+------------------------------------------------
+    1、onFinishInflate()     当View中所有的子控件均被映射成xml后触发.
+    2、onMeasure(int,int)    确定所有子元素的大小.
+    3、onLayout(boolean,int,int,int,int) 当View分配所有的子元素的大小和位置时触发.
+    4、onSizeChanged(int,int,int,int)    当view的大小发生变化时触发.
+    5、onDraw(Canvas)            view渲染内容的细节.
+    6、onKeyDown(int,KeyEvent)   有按键按下后触发.
+    7、onKeyUp(int,KeyEvent)     有按键按下后弹起时触发.
+    8、onTrackballEvent(MotionEvent) 轨迹球事件.
+    9、onTouchEvent(MotionEvent)     触屏事件.
+    10、onFocusChanged(boolean,int,Rect) 当View获取或失去焦点时触发.
+    11、onWindowFocusChanged(boolean)    当窗口包含的view获取或失去焦点时触发.
+    12、onAttachedToWindow()     当view被附着到一个窗口时触发.
+    13、onDetachedFromWindow()   当view离开附着的窗口时触发，Android123提示该方法和onAttachedToWindow()是相反的.
+    14、onWindowVisibilityChanged(int)   当窗口中包含的可见的view发生变化时触发.
+
+
+二、Android的View生命周期
+------------------------------------------------
+    1. 从构造方法开始，依次执行
+        onAttachToWindow >> onMeasure >> onSizeChanged >> onLayout >> onMeasure >> onLayout >> onDraw >> onDetachedFromWindow
+
+    2. 首先来看三分 创建view 的 日志信息 （自定义View 配置到xml文件中）：
+        <1> android:visibility = gone
+        --------------------------------------------------------------------------------------------------
+        1. 03-25 19:56:55.934: D/yyyyy(11493): onVisibilityChanged
+        2. 03-25 19:56:55.934: D/yyyyy(11493): construct 2 parameters
+        3. 03-25 19:56:55.934: E/yyyyy(11493): onFinishInflate
+        4. 03-25 19:56:55.934: D/yyyyy(11493): onVisibilityChanged
+        5. 03-25 19:56:55.934: D/yyyyy(11493): onVisibilityChanged
+        6. 03-25 19:56:55.944: D/yyyyy(11493): onRtlPropertiesChanged
+        7. 03-25 19:56:55.954: D/yyyyy(11493): onRtlPropertiesChanged
+        8. 03-25 19:56:55.954: E/yyyyy(11493): onAttachedToWindow
+        9. 03-25 19:56:55.954: D/yyyyy(11493): onWindowVisibilityChanged
+        10.03-25 19:56:55.974: D/yyyyy(11493): onWindowFocusChanged
+
+        <2> android:visibility = invisible
+        --------------------------------------------------------------------------------------------------
+        1. 03-25 19:57:38.204: D/yyyyy(11694): onVisibilityChanged
+        2. 03-25 19:57:38.204: D/yyyyy(11694): construct 2 parameters
+        3. 03-25 19:57:38.204: E/yyyyy(11694): onFinishInflate
+        4. 03-25 19:57:38.204: D/yyyyy(11694): onVisibilityChanged
+        5. 03-25 19:57:38.204: D/yyyyy(11694): onVisibilityChanged
+        6. 03-25 19:57:38.224: D/yyyyy(11694): onRtlPropertiesChanged
+        7. 03-25 19:57:38.224: D/yyyyy(11694): onRtlPropertiesChanged
+        8. 03-25 19:57:38.224: E/yyyyy(11694): onAttachedToWindow
+        9. 03-25 19:57:38.224: D/yyyyy(11694): onWindowVisibilityChanged
+        10 03-25 19:57:38.224: D/yyyyy(11694): onMeasure , width : 1080  ; height: 1557
+        11 03-25 19:57:38.224: D/yyyyy(11694): onMeasure , width : 144  ; height: 1500
+        12 03-25 19:57:38.234: D/yyyyy(11694): onSizeChanged
+        13 03-25 19:57:38.234: I/yyyyy(11694): onLayout --> l: 0  ; r : 144  ; t: 57  ; b: 201  : changed :true
+        14 03-25 19:57:38.254: D/yyyyy(11694): onMeasure , width : 1080  ; height: 1557
+        15 03-25 19:57:38.254: D/yyyyy(11694): onMeasure , width : 144  ; height: 1500
+        16 03-25 19:57:38.254: I/yyyyy(11694): onLayout --> l: 0  ; r : 144  ; t: 57  ; b: 201  : changed :false
+        17 03-25 19:57:38.264: D/yyyyy(11694): onWindowFocusChanged
+
+        <3> android:visibility=visible
+        --------------------------------------------------------------------------------------------------
+        03-25 19:55:15.434: D/yyyyy(11304): construct 2 parameters .
+        03-25 19:55:15.434: E/yyyyy(11304): onFinishInflate
+        03-25 19:55:15.434: D/yyyyy(11304): onVisibilityChanged
+        03-25 19:55:15.434: D/yyyyy(11304): onVisibilityChanged
+        03-25 19:55:15.454: D/yyyyy(11304): onRtlPropertiesChanged
+        03-25 19:55:15.454: D/yyyyy(11304): onRtlPropertiesChanged
+        03-25 19:55:15.454: E/yyyyy(11304): onAttachedToWindow
+        03-25 19:55:15.454: D/yyyyy(11304): onWindowVisibilityChanged
+        03-25 19:55:15.454: D/yyyyy(11304): onMeasure , width : 1080  ; height: 1557
+        03-25 19:55:15.454: D/yyyyy(11304): onMeasure , width : 144  ; height: 1500
+        03-25 19:55:15.464: D/yyyyy(11304): onSizeChanged
+        03-25 19:55:15.464: I/yyyyy(11304): onLayout --> l: 0  ; r : 144  ; t: 57  ; b: 201  : changed :true
+        03-25 19:55:15.474: D/yyyyy(11304): onMeasure , width : 1080  ; height: 1557
+        03-25 19:55:15.474: D/yyyyy(11304): onMeasure , width : 144  ; height: 1500
+        03-25 19:55:15.474: I/yyyyy(11304): onLayout --> l: 0  ; r : 144  ; t: 57  ; b: 201  : changed :false
+        03-25 19:55:15.474: D/yyyyy(11304): onDraw
+        03-25 19:55:15.484: D/yyyyy(11304): onWindowFocusChanged
+
+        小结:
+            1、从中不难看到view 默认为可见的，不是默认值时先调用 onVisibilityChanged，但是此时该view 的任何位置信息都不知道。
+            2、可见性改变后才是调用带有两个参数的构造函数
+            3、从xml 文件中 inflate 完成
+            4、将view 加到 window 中（View是gone的，那么View创建生命周期也就结束）
+            5、测量view的长宽 （onMeasure）
+            6、定位View 在父View中的位置 （onLayout）-->（View 是invisible ， View 创建生命周期结束）
+            7、onDraw （只有可见的 View 才在 window 中绘制）
+
+
+    3.在代码中构造View
+        <1> setContentView(new CusView(this))输入日志信息如下：
+        --------------------------------------------------------------------------------------------------
+        03-25 20:37:51.284: E/yyyyy(12530): construct 1 parameter
+        03-25 20:37:51.294: D/yyyyy(12530): onVisibilityChanged
+        03-25 20:37:51.314: D/yyyyy(12530): onVisibilityChanged
+        03-25 20:37:51.314: D/yyyyy(12530): onRtlPropertiesChanged
+        03-25 20:37:51.314: D/yyyyy(12530): onRtlPropertiesChanged
+        03-25 20:37:51.314: E/yyyyy(12530): onAttachedToWindow
+        03-25 20:37:51.314: D/yyyyy(12530): onWindowVisibilityChanged
+        03-25 20:37:51.314: D/yyyyy(12530): onMeasure , width : 1080  ; height: 1557
+        03-25 20:37:51.314: D/yyyyy(12530): onSizeChanged
+        03-25 20:37:51.324: I/yyyyy(12530): onLayout --> l: 0  ; r : 1080  ; t: 0  ; b: 1557  : changed :true
+        03-25 20:37:51.324: D/yyyyy(12530): onMeasure , width : 1080  ; height: 1557
+        03-25 20:37:51.324: I/yyyyy(12530): onLayout --> l: 0  ; r : 1080  ; t: 0  ; b: 1557  : changed :false
+        03-25 20:37:51.324: D/yyyyy(12530): onDraw
+        03-25 20:37:51.344: D/yyyyy(12530): onWindowFocusChanged
+
+
+    --  从测试结果来看，默认情况下view的长和宽默认和父 view 的长和宽一致.
+    虽然调用了onDraw 函数，但是在屏幕上却看不到任何内容，什么原因？当看不到任何内容时，请先检查View要绘制的内容是否制定。
+
+
+三、释疑
+------------------------------------------------
+    1.  为什么我指定了LayoutParameters，却没有效果？
+        <1> 在不恰当的生命周期中指定LayoutParameters，会被忽略掉，比如如下代码：
+        --------------------------------------------------------------------------------------------------
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            // setContentView(R.layout.activity_main);
+            view = new CusView(this);
+            view.setImageResource(R.drawable.ic_launcher);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(70, 70);
+            view.setLayoutParams(params);
+            setContentView(view);
+        }
+
+        <2> 正确的方法应该是放到 onWindowFocusChanged 方法获取到焦点后再指定LayoutParameters，如下代码：
+        --------------------------------------------------------------------------------------------------
+        @Override
+        public void onWindowFocusChanged(boolean hasFocus) {
+            super.onWindowFocusChanged(hasFocus);
+            if (hasFocus) {
+                view.setImageResource(R.drawable.ic_launcher);
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(70, 70);
+                view.setLayoutParams(params);
+            }
+        }
+
+
+    2. 为什么我指定LayoutParameters参数时报异常？异常信息如下：
+        java.lang.ClassCastException: android.view.ViewGroup$LayoutParams cannot be cast to android.view.ViewGroup$MarginLayoutParams.
+
+        java.lang.Object
+            android.view.ViewGroup.LayoutParams
+                android.view.ViewGroup.MarginLayoutParams
+
+        LayoutParameters的参数类型不对，从上面继承关系可以看到MarginLayoutParameters扩展了ViewGroup的layoutParameters ，将其修改为任意支持margin动作的LayoutParameters.
+
+
+    3. 接下来我们看三份销毁 View 的日志：
+        <1> android:visibility = visible
+        --------------------------------------------------------------------------------------------------
+        03-25 21:15:35.404: D/yyyyy(14589): onWindowFocusChanged
+        03-25 21:15:35.484: D/yyyyy(14589): onWindowVisibilityChanged
+        03-25 21:15:35.504: D/yyyyy(14589): onDetachedFromWindow
+
+        <2> android:visibility = gone
+        --------------------------------------------------------------------------------------------------
+        03-25 21:16:09.964: D/yyyyy(14736): onWindowFocusChanged
+        03-25 21:16:10.054: D/yyyyy(14736): onWindowVisibilityChanged
+        03-25 21:16:10.064: D/yyyyy(14736): onDetachedFromWindow
+
+        <3> android:visibility=invisible
+        --------------------------------------------------------------------------------------------------
+        03-25 21:16:42.534: D/yyyyy(14860): onWindowFocusChanged
+        03-25 21:16:42.594: D/yyyyy(14860): onWindowVisibilityChanged
+        03-25 21:16:42.614: D/yyyyy(14860): onDetachedFromWindow
+
+
+        从以上内容可以看到，visibility属性对view的销毁流程没有影响。
+
+    综上所述：View 的关键生命周期为 [改变可见性] >> 构造View >> onFinishInflate >> onAttachedToWindow >> onMeasure >> onSizeChanged >> onLayout >> onDraw >> onDetackedFromWindow
+
+
+    4. 最后给出一小段代码用于在屏幕上拖动view（通过修改view的 layout）：
+    --------------------------------------------------------------------------------------------------
+        private float mDownX, mDownY, offsetX, y;
+        private int dx, dy, il, ir, it, ib;
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            offsetX = event.getX();
+            y = event.getY();
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    mDownX = event.getX();
+                    mDownY = event.getY();
+                    il = getLeft();
+                    ir = getRight();
+                    it = getTop();
+                    ib = getBottom();
+                    break;
+
+                case MotionEvent.ACTION_MOVE:
+                case MotionEvent.ACTION_UP:
+                    dx += Math.round(offsetX - mDownX);
+                    dy += Math.round(y - mDownY);
+                    layout(il + dx, it + dy, ir + dx, ib + dy);
+                    break;
+            }
+            return true;
+        }
+
+四、附加
+------------------------------------------------
+    Android draw、onDraw、dispatchDraw、invalidate、computeScroll 一些简要说明
+
+    View中：
+    public void draw(Canvas canvas) {
+        /*
+        1. Draw the background   绘制背景
+        2. If necessary, save the canvas' layers to prepare for fading  如有必要，颜色渐变淡之前保存画布层(即锁定原有的画布内容)
+        3. Draw view's content  绘制view的内容
+        4. Draw children    绘制子view
+        5. If necessary, draw the fading edges and restore layers   如有必要，绘制颜色渐变淡的边框，并恢复画布(即画布改变的内容附加到原有内容上)
+        6. Draw decorations (scrollbars for instance)   绘制装饰，比如滚动条
+        */
+        ...
+        if (!dirtyOpaque) {
+            drawBackground(canvas); //背景绘制
+        }
+        // skip step 2 & 5 if possible (common case) 通常情况跳过第2和第5步
+        ...
+        if (!dirtyOpaque) onDraw(canvas); //调用onDraw
+        dispatchDraw(canvas);   //绘制子view
+        onDrawScrollBars(canvas); //绘制滚动条
+        ...
+    }
+    protected void dispatchDraw(Canvas canvas) { //空实现 }
+    protected void onDraw(Canvas canvas) { //空实现 }
+
+    ViewGroup中：
+    protected void dispatchDraw(Canvas canvas) {
+        ...
+        drawChild(...); //绘制子view
+        ...
+    }
+
+    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+            return child.draw(canvas, this, drawingTime);
+    }
+
+
+    说明：
+    1. 自定义一个view时，重写onDraw。
+        调用view.invalidate(),会触发onDraw和computeScroll()。前提是该view被附加在当前窗口上
+        view.postInvalidate();  // 是在非UI线程上调用的
+
+    2.  自定义一个ViewGroup，重写onDraw()。
+        onDraw  可能不会被调用，原因是需要先设置一个背景(颜色或图)。
+                表示这个group有东西需要绘制了，才会触发draw()，之后是onDraw。
+                因此，一般直接重写dispatchDraw来绘制viewGroup
+
+    3. 自定义一个ViewGroup
+        dispatchDraw会调用drawChild。
+
+
+五、自定义View的构造函数
+------------------------------------------------
+初始Custom View的构造函数
+之前写过一篇实现圆形进度条的博客（自定义圆形进度条），通常我们在实现Custom View的时候,都会先继承View并实现View的三个构造函数,例如:
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.util.AttributeSet;
+import android.view.View;
+
+public class MyCustomView extends View {
+
+    // 第一个构造函数
+    public MyCustomView(Context context) {
+        this(context, null);
+    }
+
+    // 第二个构造函数
+    public MyCustomView(Context context, AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
+
+    // 第三个构造函数
+    public MyCustomView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        // TODO:获取自定义属性
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+    }
+}
+网上有很多关于三个构造函数使用时机的说法,但是说法正确的却没有几家,这里正式的给大家科普一下:
+在代码中直接new一个Custom View实例的时候,会调用第一个构造函数.这个没有任何争议.
+在xml布局文件中调用Custom View的时候,会调用第二个构造函数.这个也没有争议.
+在xml布局文件中调用Custom View,并且Custom View标签中还有自定义属性时,这里调用的还是第二个构造函数.
+也就是说,系统默认只会调用Custom View的前两个构造函数,至于第三个构造函数的调用,通常是我们自己在构造函数中主动调用的（例如,在第二个构造函数中调用第三个构造函数）.
+至于自定义属性的获取,通常是在构造函数中通过obtainStyledAttributes函数实现的.这里先介绍一下如何生成Custom View的自定义属性.
+
+
+五、自定义View的大小测量
+------------------------------------------------

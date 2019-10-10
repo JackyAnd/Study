@@ -1,0 +1,25 @@
+1. 查询表里面的数据插入另一张表的sql语句
+	insert into table1(uname,address,school)
+	select name, address, '北京大学' from table2
+
+2. 添加外键约束
+	2.1 建表时添加
+	
+	2.2 建表后添加
+
+3. 建表时添加唯一性约束
+    3.1 单字段唯一性约束
+
+
+    3.2 联合字段唯一性约束
+        1. 这里的唯一性，有两种方法，第一个直接在创价表的时候，定义unique。
+        create table fpgaData( id int primary key, dev_num int not null, unique（id,dev_num) );
+
+        2. 第二种创建联合索引可以达到我们的目的：
+        sql = "create table fpgaData( id int primary key, dev_num int not null,
+                    state_flg int, error_cd int, present_p int, power int, year int, month int, day int, min int );
+                    CREATE UNIQUE INDEX fpgaData_I ON fpgaData(id, dev_num);";
+
+
+4. MySQL中如何去掉一个字段的首尾空格
+    UPDATE test SET title = TRIM(title);

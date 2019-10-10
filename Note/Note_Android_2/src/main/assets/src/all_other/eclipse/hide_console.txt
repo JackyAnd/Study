@@ -1,0 +1,4 @@
+Eclipse的控制台console有时候经常的跳出来，非常的烦人!
+ 让它不经常的调出来，可以按下面的操作去掉它： 
+windows  ->   preferences   ->  run/debug   ->   console 
+在右边面板去掉"Show when program writest to standard out"和"Show when program writes to standard error"两个多选框，然后重启Eclipse。

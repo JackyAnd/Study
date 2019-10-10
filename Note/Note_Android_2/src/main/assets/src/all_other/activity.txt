@@ -1,0 +1,30 @@
+﻿一、调用别的应用的activity
+
+    第一种：ComponentName()
+
+    使用ComponentName()可以跳转到任何一个activity，不论是不是main activity。也不必写修改被调用的apk的AndroidManifest.xml任何内容，如下：
+
+        ComponentName componetName = new ComponentName(
+            "com.hooy.apk2",    //这个是另外一个应用程序的包名 
+            "com.hooy.apk2.Pay_Activity");  //这个参数是要启动的Activity 
+            // Intent intent= new Intent("chroya.foo");
+        
+        Intent intent= new Intent();
+        //我们给他添加一个参数表示从apk1传过去的
+        Bundle bundle = new Bundle();
+        bundle.putString("arge1", "这是跳转过来的！来自apk1");
+        intent.putExtras(bundle);
+        intent.setComponent(componetName);
+        startActivity(intent);
+
+    第二种方法Intent+AndroidManifest.xml
+
+        顾名思义，此方法是用Intent和修改AndroidManifest.xml达成的。
+        <intent-filter>   
+                <action android:name="com.foo"/>   
+                <category android:name="android.intent.category.DEFAULT"/>   
+        </intent-filter> 
+        
+        Intent intent = new Intent("com.foo");   
+        startActivity(intent);    
+--------------------- 

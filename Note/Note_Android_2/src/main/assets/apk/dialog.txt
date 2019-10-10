@@ -1,0 +1,8 @@
+演示系统AlertDialog的使用
+----------------------------------------
+1. 简单的     			AlertDialog;
+2. 带按钮的			AlertDialog;
+3. 类似ListView的	AlertDialog;
+4. 类似RadioButton的	AlertDialog;
+5. 类似CheckBox的	AlertDialog;
+6. 自定义View的		AlertDialog;

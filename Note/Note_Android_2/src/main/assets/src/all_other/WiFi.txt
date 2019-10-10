@@ -1,0 +1,356 @@
+http://blog.csdn.net/wangbaochu/article/details/52040553
+
+一、最近开发wifi热点扫描功能，要判断当前连接的wifi热点是否需要密码。在网上搜索之后，发现有如下方法：
+--------------------------------------------------------------------------------------------
+    private static final int  WIFI_NEED_PASSWORD = 0;
+    private static final int  WIFI_NO_PASSWORD = 1;
+    private static final int  WIFI_NOT_CONNECTED = 2;
+
+    public static final String WIFI_AUTH_OPEN = "";
+    public static final String WIFI_AUTH_ROAM = "[ESS]";
+
+    private static int checkWifiPassword(Context context) {
+        WifiInfo wifiInfo = null;
+        WifiManager mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        try {
+            mWifiManager.startScan();
+            // 得到当前连接的wifi热点的信息
+            wifiInfo = mWifiManager.getConnectionInfo();
+        } catch (SecurityException e) {
+            return WIFI_NEED_PASSWORD;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        if (wifiInfo == null) {
+            Log.i(TAG, "wifi not connected");
+            return WIFI_NOT_CONNECTED;
+        }
+
+        String ssid = wifiInfo.getSSID();
+        if (ssid == null) {
+            return WIFI_NOT_CONNECTED;
+        } else if (ssid.length() <= 2) {
+            return WIFI_NOT_CONNECTED;
+        }
+        if (ssid.startsWith("\"") && ssid.endsWith("\"")) {
+            ssid = ssid.substring(1, ssid.length() - 1);
+        }
+
+        List<ScanResult> mWifiList = null;
+        try {
+            // 得到扫描结果
+            mWifiList = mWifiManager.getScanResults();
+        } catch (SecurityException e) {
+            return WIFI_NEED_PASSWORD;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (mWifiList != null && mWifiList.size() > 0) {
+            try {
+                for (ScanResult sr : mWifiList) {
+                    if (sr.SSID.equals(ssid) && sr.BSSID.equals(wifiInfo.getBSSID())) {
+                        if (sr.capabilities != null) {
+                            String capabilities = sr.capabilities.trim();
+                            if (capabilities != null && (capabilities.equals(WIFI_AUTH_OPEN) || capabilities.equals(WIFI_AUTH_ROAM))) {
+                                return WIFI_NO_PASSWORD;
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                return WIFI_NEED_PASSWORD;
+            }
+        }
+
+        return WIFI_NEED_PASSWORD;
+    }
+
+
+二、AndroidManifest.xml添加如下权限
+--------------------------------------------------------------------------------------------
+    <!--wifi扫描需要此权限-->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+上述方法的确可以通过capabilities来判断wifi是否需要密码，但是测试过程中发现：有些手机如果在settings页面把“定位”功能关闭，则无法获取到扫描结果，WifiManager.getScanResults() 总是返回空。为了解决这个问题，我尝试着用其它方法来判断，后来证明可以用WifiConfigration来代替capabilities进行判断。
+三、ScanResult、 WifiConfiguration、 WifiInfo 简介
+--------------------------------------------------------------------------------------------
+    (1) ScanResult：主要是通过wifi 硬件的扫描来获取一些周边的wifi 热点的信息。在我们进行wifi 搜索的时候，一般会搜到这些信息，
+                    首先是接入点名字、接入点信息的强弱、还有接入点使用的安全模式，是WPA、WPE。打开这个类，我们可以看到以下几个信息
+    ----------------------------------------------------------------------------------------------------------------------------------
+        BSSID   接入点的地址，这里主要是指小范围几个无线设备相连接所获取的地址，比如说两台笔记本通过无线网卡进行连接，双方的无线网卡分配的地址。
+        SSID    网络的名字，当我们搜索一个网络时，就是靠这个来区分每个不同的网络接入点。
+        Capabilities 网络接入的性能，这里主要是来判断网络的加密方式等。
+        Frequency   频率，每一个频道交互的MHz 数。
+        Level   等级，主要来判断网络连接的优先数。
+
+    (2) WifiConfiguration: 在我们连通一个wifi 接入点的时候，需要获取到的一些信息：
+    ----------------------------------------------------------------------------------------------------------------------------------
+        1. WifiConfiguration.AuthAlgorthm 设置加密方法。
+            可选参数：LEAP只用于leap,
+            OPEN 被wpa/wpa2需要,
+            SHARED 需要一个静态的wep key
+        2. WifiConfiguration.GroupCipher 使用使用GroupCipher 的方法来进行加密。
+            可选参数：CCMP,TKIP,WEP104,WEP40
+        3. WifiConfiguration.KeyMgmt 键管理机制（keymanagerment），使用KeyMgmt 进行.
+            可选参数IEEE8021X,NONE,WPA_EAP,WPA_PSK
+        4. WifiConfiguration.PairwiseCipher 设置加密方式。
+            可选参数 CCMP,NONE,TKIP
+
+            扩展：1.一般WIFI加密有几种方式：参考(代码二）
+                 (1).WPA-PSK/WPA2-PSK(目前最安全家用加密)
+                 (2).WPA/WPA2(较不安全)
+                 (3).WEP(安全较差)
+        5. WifiConfiguration.Protocol 设置使用哪一种协议进行加密。
+            可选参数 RSN,WPA,
+        6. wifiConfiguration.Status 设置当前网络的状态。
+            可选参数CURRENT,DISABLED,ENABLED,
+
+    (3) WifiInfo ：在我们的wifi 已经连通了以后，可以通过这个类获得一些已经连通的wifi 连接的信息获取当前链接的信息，这里简单介绍一下这里的方法:
+    ----------------------------------------------------------------------------------------------------------------------------------
+        getBSSID() 获取BSSID
+        getDetailedStateOf() 获取客户端的连通性
+        getHiddenSSID() 获得SSID 是否被隐藏
+        getIpAddress() 获取IP 地址
+        getLinkSpeed() 获得连接的速度
+        getMacAddress() 获得Mac 地址
+        getRssi() 获得802.11n 网络的信号
+        getSSID() 获得SSID
+        getSupplicanState() 返回具体客户端状态的信息
+
+
+四、使用WifiConfiguration来判断wifi是否需要密码，此方法不需要扫描wifi热点，即使在settings页面把“定位”功能关闭，仍能正常工作。具体实现如下：
+--------------------------------------------------------------------------------------------
+代码一：利用WifiConfiguration.KeyMgmt的管理机制，来判断当前wifi是否需要连接密码
+    -----------------------------------------------------------------------------------------------
+    /**
+     * 利用WifiConfiguration.KeyMgmt的管理机制，来判断当前wifi是否需要连接密码
+     * @return true：需要密码连接，false：不需要密码连接
+     */
+    public static boolean checkIsCurrentWifiHasPassword(String currentWifiSSID) {
+       try {
+            WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+
+            // 得到当前连接的wifi热点的信息
+            WifiInfo wifiInfo = mWifiManager.getConnectionInfo();
+
+            // 得到当前WifiConfiguration列表，此列表包含所有已经连过的wifi的热点信息，未连过的热点不包含在此表中
+            List<WifiConfiguration> wifiConfiguration = wifiManager.getConfiguredNetworks();
+
+            String currentSSID = wifiInfo.getSSID();
+            if (currentSSID != null && currentSSID.length() > 2) {
+                if (currentSSID.startsWith("\"") && currentSSID.endsWith("\"")) {
+                    currentSSID = currentSSID.substring(1, currentSSID.length() - 1);
+                }
+
+                if (wifiConfiguration != null && wifiConfiguration.size() > 0) {
+                    for (WifiConfiguration configuration : wifiConfiguration) {
+                        if (configuration != null && configuration.status == WifiConfiguration.Status.CURRENT) {
+                            String ssid = null;
+                            if (!TextUtils.isEmpty(configuration.SSID)) {
+                                ssid = configuration.SSID;
+                                if (configuration.SSID.startsWith("\"") && configuration.SSID.endsWith("\"")) {
+                                    ssid = configuration.SSID.substring(1, configuration.SSID.length() - 1);
+                                }
+                            }
+                            if (TextUtils.isEmpty(currentSSID) || currentSSID.equalsIgnoreCase(ssid)) {
+                                // KeyMgmt.NONE表示无需密码
+                                return (!configuration.allowedKeyManagement.get(WifiConfiguration.KeyMgmt.NONE));
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            //do nothing
+        }
+        return true;    // 默认为需要连接密码
+    }
+
+
+代码二：获取WiFi加密方式 那么这个安全性是怎么获取的呢？通过查阅系统源码可知：
+    -----------------------------------------------------------------------------------------------
+    public class MainActivity extends Activity {
+
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_main);
+
+            WifiManager mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+            WifiInfo info = mWifiManager.getConnectionInfo();
+
+            // 得到配置好的网络连接
+            List wifiConfigList = mWifiManager.getConfiguredNetworks();
+            for (int i = 0; i < wifiConfigList.size(); i++) {
+                Log.i("hefeng", wifiConfigList.get(i).toString());
+                Log.i("hefeng", info.getSSID() + "||" + wifiConfigList.get(i).SSID);
+                if (info.getSSID().equals(wifiConfigList.get(i).SSID)) {
+                    Log.e("hefeng", "当前网络安全性：" + getSecurity(wifiConfigList.get(i)));
+                }
+            }
+        }
+
+        /**
+         * These values are matched in string arrays -- changes must be kept in sync
+         */
+        static final int SECURITY_NONE = 0;
+        static final int SECURITY_WEP = 1;
+        static final int SECURITY_PSK = 2;
+        static final int SECURITY_EAP = 3;
+
+        static int getSecurity(WifiConfiguration config) {
+            if (config.allowedKeyManagement.get(KeyMgmt.WPA_PSK)) {
+                return SECURITY_PSK;
+            }
+            if (config.allowedKeyManagement.get(KeyMgmt.WPA_EAP) || config.allowedKeyManagement.get(KeyMgmt.IEEE8021X)) {
+                return SECURITY_EAP;
+            }
+            return (config.wepKeys[0] != null) ? SECURITY_WEP : SECURITY_NONE;
+        }
+
+        这样就可以获取到了。这样做可以避免你的wifi ssid被隐藏了还可以获取到加密方式
+代码三：一般获取加密方式是这样的，但是一旦你在路由器上面设置ssid隐藏了，你就搜索不到的
+    -----------------------------------------------------------------------------------------------
+    public void getCipherType(Context context, String ssid) {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+
+        List list = wifiManager.getScanResults();
+        for (ScanResult scResult : list) {
+             if (!TextUtils.isEmpty(scResult.SSID) && scResult.SSID.equals(ssid)) {
+                 String capabilities = scResult.capabilities;
+                 Log.i("hefeng","capabilities=" + capabilities);
+
+                 if (!TextUtils.isEmpty(capabilities)) {
+
+                     if (capabilities.contains("WPA") || capabilities.contains("wpa")) {
+                         Log.i("hefeng", "wpa");
+
+                     } else if (capabilities.contains("WEP") || capabilities.contains("wep")) {
+                         Log.i("hefeng", "wep");
+                     } else {
+                         Log.i("hefeng", "no");
+                     }
+                 }
+             }
+         }
+     }
+
+
+子类
+class   WifiConfiguration.AuthAlgorithm    公认的IEEE 802.11认证算法
+class   WifiConfiguration.GroupCipher      公认的组密码
+class   WifiConfiguration.KeyMgmt            公认的密钥管理方案
+class   WifiConfiguration.PairwiseCipher   公认的WPA配对密码
+class   WifiConfiguration.Protocol              公认的安全协议
+class   WifiConfiguration.Status                 网络配置的可能状态
+（WifiConfiguration.AuthAlgorthm用来判断加密方法。
+WifiConfiguration.GroupCipher获取使用GroupCipher 的方法来进行加密。
+WifiConfiguration.KeyMgmt获取使用KeyMgmt 进行。
+WifiConfiguration.PairwiseCipher获取使用WPA 方式的加密。
+WifiConfiguration.Protocol获取使用哪一种协议进行加密。
+wifiConfiguration.Status获取当前网络的状态。）
+
+
+字段
+public String   BSSID          当设置了这个字段，这个网络配置只能被用于与访问点关联的指定MAC
+public String  FQDN           AAA或者RADIUS等服务器的完全合格域名
+public String  SSID             Wifi网络名称
+public BitSet   allowedAuthAlgorithms                该配置支持的身份验证协议集合
+public BitSet   allowedGroupCiphers                  该配置所支持的组密码集合
+public BitSet   allowedKeyManagement             该配置所支持的密钥管理集合
+public BitSet   allowedPairwiseCiphers              该配置所支持的WPA配对密码集合
+public BitSet   allowedProtocols                         该配置所支持的安全协议集合
+public WifiEnterpriseConfig   enterpriseConfig   企业详细配置指定的EAP方法，证书以及EAP相关的其他设置
+public boolean    hiddenSSID                             设置该项会使一个网络不广播其SSID，因此这种特定的SSID只能用于浏览
+public int     networkId                                        客户端用于识别网络配置的ID
+public String    preSharedKey                            WPA-PSK使用的预共享密钥
+public int    priority                                              当选择了一个相关的网络访问点时，优先级决定了一个通过wpa客户端访问网络的优先权
+
+
+
+
+
+
+
+linux下的find文件查找命令与grep文件内容查找命令
+
+linux下的find文件查找命令与grep文件内容查找命令
+
+linux下的find文件查找命令与grep文件内容查找命令
+
+　　在使用linux时，经常需要进行文件查找。其中查找的命令主要有find和grep。两个命令是有区的。
+
+　　区别：(1)find命令是根据文件的属性进行查找，如文件名，文件大小，所有者，所属组，是否为空，访问时间，修改时间等。
+
+               (2)grep是根据文件的内容进行查找，会对文件的每一行按照给定的模式(patter)进行匹配查找。
+
+　　一.find命令
+
+　　　　基本格式：find  path expression
+
+　　　　1.按照文件名查找
+
+　　　　(1)find / -name httpd.conf　　#在根目录下查找文件httpd.conf，表示在整个硬盘查找
+　　　　(2)find /etc -name httpd.conf　　#在/etc目录下文件httpd.conf
+　　　　(3)find /etc -name '*srm*'　　#使用通配符*(0或者任意多个)。表示在/etc目录下查找文件名中含有字符串‘srm’的文件
+　　　　(4)find . -name 'srm*' 　　#表示当前目录下查找文件名开头是字符串‘srm’的文件
+
+　　　　2.按照文件特征查找 　　　　
+
+　　　　(1)find / -amin -10 　　# 查找在系统中最后10分钟访问的文件(access time)
+　　　　(2)find / -atime -2　　 # 查找在系统中最后48小时访问的文件
+　　　　(3)find / -empty 　　# 查找在系统中为空的文件或者文件夹
+　　　　(4)find / -group cat 　　# 查找在系统中属于 group为cat的文件
+　　　　(5)find / -mmin -5 　　# 查找在系统中最后5分钟里修改过的文件(modify time)
+　　　　(6)find / -mtime -1 　　#查找在系统中最后24小时里修改过的文件
+　　　　(7)find / -user fred 　　#查找在系统中属于fred这个用户的文件
+　　　　(8)find / -size +10000c　　#查找出大于10000000字节的文件(c:字节，w:双字，k:KB，M:MB，G:GB)
+　　　　(9)find / -size -1000k 　　#查找出小于1000KB的文件
+
+　　　　3.使用混合查找方式查找文件
+
+　　　　参数有： ！，-and(-a)，-or(-o)。
+
+　　　　(1)find /tmp -size +10000c -and -mtime +2 　　#在/tmp目录下查找大于10000字节并在最后2分钟内修改的文件
+   　　    (2)find / -user fred -or -user george 　　#在/目录下查找用户是fred或者george的文件文件
+   　　    (3)find /tmp ! -user panda　　#在/tmp目录中查找所有不属于panda用户的文件
+    　　
+
+　　二、grep命令
+
+　　　  基本格式：find  expression
+
+ 　　　 1.主要参数
+
+　　　　[options]主要参数：
+　　　　－c：只输出匹配行的计数。
+　　　　－i：不区分大小写
+　　　　－h：查询多文件时不显示文件名。
+　　　　－l：查询多文件时只输出包含匹配字符的文件名。
+　　　　－n：显示匹配行及行号。
+　　　　－s：不显示不存在或无匹配文本的错误信息。
+　　　　－v：显示不包含匹配文本的所有行。
+
+　　　　pattern正则表达式主要参数：
+　　　　\： 忽略正则表达式中特殊字符的原有含义。
+　　　　^：匹配正则表达式的开始行。
+　　　　$: 匹配正则表达式的结束行。
+　　　　\<：从匹配正则表达 式的行开始。
+　　　　\>：到匹配正则表达式的行结束。
+　　　　[ ]：单个字符，如[A]即A符合要求 。
+　　　　[ - ]：范围，如[A-Z]，即A、B、C一直到Z都符合要求 。
+　　　　.：所有的单个字符。
+　　　　* ：有字符，长度可以为0。
+
+　　　　2.实例　
+
+　　(1)grep 'test' d*　　#显示所有以d开头的文件中包含 test的行
+　　(2)grep ‘test’ aa bb cc 　　 #显示在aa，bb，cc文件中包含test的行
+　　(3)grep ‘[a-z]\{5\}’ aa 　　#显示所有包含每行字符串至少有5个连续小写字符的字符串的行
+　　(4)grep magic /usr/src　　#显示/usr/src目录下的文件(不含子目录)包含magic的行
+　　(5)grep -r magic /usr/src　　#显示/usr/src目录下的文件(包含子目录)包含magic的行
+
+　　(6)grep -w pattern files ：只匹配整个单词，而不是字符串的一部分(如匹配’magic’，而不是’magical’)，

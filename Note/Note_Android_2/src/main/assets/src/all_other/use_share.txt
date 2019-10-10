@@ -1,0 +1,7 @@
+public static void shareWithOther(Context context,String msg){
+			  Intent intent=new Intent(Intent.ACTION_SEND);
+		      intent.setType("text/plain");
+		      intent.putExtra(Intent.EXTRA_SUBJECT, "分享");
+		      intent.putExtra(Intent.EXTRA_TEXT, msg);
+		      context.startActivity(Intent.createChooser(intent, "分享软件"));
+		}

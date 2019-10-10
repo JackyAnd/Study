@@ -1,0 +1,30 @@
+172.16.0.100/personal-share/L110_update
+
+@崇生，升级检测地址改为http://172.16.0.100:8080/update
+
+update.json 是需要返回的数据，其中downloadUrl填写需要下载的fota文件名，该fata文件也放到这个目录下。
+
+
+
+
+--
+上海禹昌信息科技
+地址：上海市闵行区宜山路1698号兴迪大厦1303室
+邮箱：chenqiang@onegohome.com
+邮编：201103
+手机：18321640141
+
+在 2017-08-24 11:28:11，"陈强" <chenqiang@onegohome.com> 写道：
+http://www.mocky.io/
+
+在body里填入需要返回的数据, 会生成一个链接，在代码里测试即可
+  {
+  "ver":"TES0014.1.0.1.4T03G0408_M016",
+ "releaseDate":"2017-01-18 11:39:16",
+ "oldver":"TES0014.1.0.1.4T02G0408_M016",
+ "downloadUrl":"http:\/\/awsbj0-cdn.fds.api.xiaomi.com\/webfile\/testwatch\/1.0.2.zip?20170421",
+ "project":"TES0014",
+ "description":"版本: T03G0408\n修改点:\n123\n\n注意:123",
+"force":"0",
+  "md5":"66f460ac53997bda57cbf2ae6aaf050e"
+  }

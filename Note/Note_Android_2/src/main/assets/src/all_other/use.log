@@ -1,0 +1,12 @@
+android提供了自己的log输出api-->位于android.util.Log这个类中. 
+这个类比较常用的打印日志的方法有5个,这5个方法都会把日志打印到LogCat中: 
+Log.v(tag,message);        //verbose模式,打印最详细的日志 
+Log.d(tag,message);        //debug级别的日志 
+Log.i(tag,message);        //info级别的日志 
+Log.w(tag,message);        //warn级别的日志 
+Log.e(tag,message);        //error级别的日志 
+其中tag和message分别是两个String值.从android开发帮助文档中来看,tag和message的定义分别是: 
+tag     Used to identify the source of a log message. It usually identifies the class or activity where the log call occurs. 
+msg     The message you would like logged. 
+可看出tag用来标记log消息的源头的.而message则是这条log的内容. 
+从日志的输出数量来算,error,warn,info,debug,verbose,数量从少到多. 

@@ -1,0 +1,50 @@
+一、定时发送广播
+---------------------------------------------------------------------------------------------
+    AlarmManager am = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+    Intent intent = new Intent("android.alarm.demo.action");
+    PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+    //闹铃间隔， 这里设为1分钟闹一次，在第2步我们将每隔1分钟收到一次广播
+    //int interval = 60 * 1000;
+    //am.setRepeating(AlarmManager.RTC_WAKEUP, timeInMillis, interval, sender);
+    am.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, sender);
+
+
+
+    我在设置时钟的时候遇到一点问题
+    我开始的代码是这样写的
+    [java] view plain copy
+    alarmManager.set(AlarmManager.RTC_WAKEUP, (5*1000), sender);
+    我的本意是设定五秒后启动闹钟 但是每次都是我设置完闹钟之后立马就启动了。
+    后来我发现问题出在第二个参数上 我对他的理解是错误的
+
+    我之前以为它是“延迟”时间，而实际它是“启动”时间。
+    要理解这个参数还要看type这个参数
+    [java] view plain copy
+    public static final int ELAPSED_REALTIME
+            //当系统进入睡眠状态时，这种类型的闹铃不会唤醒系统。直到系统下次被唤醒才传递它，该闹铃所用的时间是相对时间，是从系统启动后开始计时的,包括睡眠时间，可以通过调用SystemClock.elapsedRealtime()获得。系统值是3    (0x00000003)。
+
+            public static final int ELAPSED_REALTIME_WAKEUP
+            //能唤醒系统，用法同ELAPSED_REALTIME，系统值是2 (0x00000002) 。
+
+            public static final int RTC
+            //当系统进入睡眠状态时，这种类型的闹铃不会唤醒系统。直到系统下次被唤醒才传递它，该闹铃所用的时间是绝对时间，所用时间是UTC时间，可以通过调用 System.currentTimeMillis()获得。系统值是1 (0x00000001) 。
+
+            public static final int RTC_WAKEUP
+            //能唤醒系统，用法同RTC类型，系统值为 0 (0x00000000) 。
+    它大致分为两种类型 一种是相对时间 一种是绝对时间
+    所以，根据使用的类型不同 triggerAtTime设置也有所不同
+    如果使用ELAPSED_REALTIME_WAKEUP类型 应该调用SystemClock.elapsedRealtime()获取相对时间在加上你设定的延迟时间
+    [java] view plain copy
+    alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime()+5000, sender);
+    如果使用RTC_WAKEUP类型 应该调用System.currentTimeMillis()获取从1970.1.1号以来的时间在加上你设定的延迟时间
+    [java] view plain copy
+    alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+5000, sender);
+    setRepeating方法有4个参数，这些参数的含义如下：
+
+    type：表示警报类型，一般可以取的值是AlarmManager.RTC和AlarmManager.RTC_WAKEUP。如果将type参数值设为AlarmManager.RTC，表示是一个正常的定时器，如果将type参数值设为AlarmManager.RTC_WAKEUP，除了有定时器的功能外，还会发出警报声（例如，响铃、震动）。
+
+    triggerAtTime：第1次运行时要等待的时间，也就是执行延迟时间，单位是毫秒。
+
+    interval：表示执行的时间间隔，单位是毫秒。
+
+    operation：一个PendingIntent对象，表示到时间后要执行的操作。PendingIntent与Intent类似，可以封装Activity、BroadcastReceiver和Service。但与Intent不同的是，PendingIntent可以脱离应用程序而存在。

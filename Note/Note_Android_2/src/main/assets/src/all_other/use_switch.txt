@@ -1,0 +1,53 @@
+1.滑块图标(thumb)
+--------------------
+	
+
+2.背景图片(track)
+--------------------
+
+
+3.滑块与背景关系
+--------------------
+	1.滑块的高度必须与背景图片的高度一致(不一致的的滑块会被要压缩或被拉伸到与背景(track)的高度一致)
+	
+4.1.switch的高度
+--------------------
+	switch的高度取决于背景(track)的高度
+
+4.2.switch的宽度
+--------------------
+switchWidth = Math.max(mSwitchMinWidth, maxTextWidth * 2 + mThumbTextPadding * 4 + mTempRect.left + mTempRect.right);
+
+mSwitchMinWidth   : [0] 在配置中进行配置，对应配置文件中的 switchMinWidth 属性
+maxTextWidth      : [0] 对应属性textOn中字体宽度和属性textOff中字体宽度中的最大值
+mThumbTextPadding : 对应属性thumbTextPadding的值
+ mTempRect.left   : [0] 
+ mTempRect.right  : [0]
+ 
+公式:
+---------------------
+	mThumbTextPadding    = A
+	背景(track)的高度    = B
+	背景(track)的宽度    = A * 4
+	滑块(thumb)的宽度    = C
+	滑块(thumb)的高度    = B	-> 与背景的高度一致
+	---------------------------------------------------------------------------------------------------------
+					mdpi(w * h)		hdpi = 1.5					xhdpi = 2				xxhdpi = 3
+ 	背景(track)		(A * 4) * B		(A * 4 * 1.5) * (B * 1.5)	(A * 4 * 2) * (B * 2)	(A * 4 * 3) * (B * 3)
+ 	滑块(thumb)		C * B			(C * 1.5) * (B * 1.5)		(C * 2) * (B * 2)		(C * 3) * (B * 3)
+
+
+例子1.
+----------------
+ 设计一个switch宽高为(64x24)dp的组件
+ 	----------------------------------------------
+ 							mdpi	hdpi			xhdpi			xxhdpi
+ 	mThumbTextPadding = 16	16		16 * 1.5 = 24	16 offsetX 2 = 32		16 offsetX 3 = 48
+ 	
+ 
+ 
+ 
+ 
+ 
+ 
+ 

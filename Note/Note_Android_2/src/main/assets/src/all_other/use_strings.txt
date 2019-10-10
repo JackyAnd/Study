@@ -1,0 +1,158 @@
+一、在 res/strings.xml 文件中使用 html 标签
+--------------------------------------------
+1.概述
+	1.1.根据 StringBlock.java(frameworks\base\core\java\android\content\res)的 get方法源码可知，有以下标签类型可以支持：
+		<b></b>	: 加粗字体
+		<i></i>	: 斜体字体
+		<u></u> : 给字体加下划线
+		<tt></tt>	: 参见html，标签内的文字等宽字体，比如 abliab中间的 li 会窄，用这个后就一样宽了 
+		<li></li>	: 用在首位，多个列表的圆点符号 
+		<sup></sup>	: 上下标	
+		<sub></sub>	:
+		<big></big>	: 
+		<small></small>	: 
+		<font></font>	: 设置字体样式. (属性: fgcolor、bgcolor、height、size) 注：颜色取值规范 #FFRRGGBB,前面两位为透明值，不设则为00.
+		<strike></strike> : 删除线 
+		<marquee></marquee>	: (注:没有具体测试)
+	
+	1.2.转义字符
+		换行 	：\n 或 &#x000A;
+		空格		：\u0020
+		省略号 	：\u2026  或 &#x0020;
+		回车  	：&#x000D;
+		Tab    	：&#x0009;
+		”   	：&#34; 或 &quot;
+		’   	：&#39; 或 &apos;
+		&    	：&#38; 或 &amp;
+		<     	：&#60; 或 &lt;
+		>      	：&62;  或 &gt;
+		
+		
+2.用例
+	2.1.如何在<string></string>中使用 % 号,有两个办法可供选择:
+		1.用%%来表示1个%，和转意符号 \ 的用法相同;
+		2.如果你的字符串不需要格式化，可以在你的<string 标签上增加一个属性:formatted="false"例如 <string name="test" formatted="false">% test %</string> 即可.
+		3.示例：<string name="welcome_messages">Hello, %1$s! You have %2$d new messages.</string>
+		    注解: 在这个例子中，这个格式化的字符串有2个参数， %1$s是个字符串, %2$f 是个浮点数,在程序中按照下面的方法来格式化字符串：
+		    %d : 表示整数
+			%f : 表示浮点数
+			%s : 表示字符串
+		    Resources res = getResources();
+			String text = String.format(res.getString(R.string.welcome_messages), username, mailCount);
+
+			TextView tv = (TextView) findViewById(R.id.tv_test);
+			tv.setText(Html.fromHtml(getString(resId) + "<font color=\"#000000\">" + content + "</font>"));
+			注：color颜色值只能是6位，不能为8位，否则无效
+	
+	2.2.如何在<string></string>中使用 html 标签,
+		1.示例
+		-----------------------------------------
+			<?xml version="1.0" encoding="utf-8"?>
+			<resources>
+			    <string name="welcome">Welcome to <b>Android</b>!</string>
+			</resources>
+		-----------------------------------------
+		2.在xml配置文件中使用资源
+			<TextView
+		        android:id="@+id/lbl_welcome"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:text="@string/welcome" />
+		3.在代码中使用资源
+			Resources res =getResources();
+			String text = String.format(res.getString(R.string.welcome), username, mailCount);
+			CharSequence styledText = Html.fromHtml(text);
+			
+			
+3. 其他
+--------------
+一、使用xliff的用法：
+<xliff:g>标签介绍： 
+属性id可以随便命名 
+属性值举例说明
+%n$ms：代表输出的是字符串，n代表是第几个参数，设置m的值可以在输出之前放置空格 
+%n$md：代表输出的是整数，n代表是第几个参数，设置m的值可以在输出之前放置空格，也可以设为0m,在输出之前放置m个0 
+%n$mf：代表输出的是浮点数，n代表是第几个参数，设置m的值可以控制小数位数，如m=2.2时，输出格式为00.00 
+也可简单写成：
+%d   （表示整数）
+%f    （表示浮点数）
+%s   （表示字符串）
+ 
+使用步骤举例：
+1.记得要在字符文件中加上这些：
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"> 
+2.
+ <string name="test_xliff">小姐今年<xliff:g id="xxx">%1d</xliff:g>岁了，上<xliff:g id="yyy">%2s</xliff:g>年级！</string>
+或者
+<string name="test_xliff">小姐今年<xliff:g id="xxx">%d</xliff:g>岁了，上<xliff:g id="yyy">%s</xliff:g>年级！</string>
+加上参数和空格的写法是：
+ <string name="test_xliff">小姐今年<xliff:g id="xxx">%1$3d</xliff:g>岁了，上<xliff:g id="yyy">%2$5s</xliff:g>年级！</string>
+3. 
+String test = String.format(getResources().getString(R.string.test_xliff), 7, "二");
+输出：
+小姐今年7岁了，上二年级！
+加上参数和空格的输出：
+小姐今年   7岁了，上     二年级！
+ 
+ 
+ 二、不使用xliff的用法：
+1、整型，比如“小姐今年23岁了”，这个23是整型的。在string.xml中可以这样写，
+<string name="old">小姐今年%1$d岁了</string>
+
+
+
+
+
+
+
+
+
+
+前言：最近写一个列表，UI设计的效果是将一串字符串分段以不同的字体、颜色、大小显示到View中，开始想法是这样，在布局多开几个TextView分别设置不同的格式就行了，但是同事说有其他更简洁的办法（使用Html标签)。突然感觉恍然大悟，之前也用过几次Html标签，发现还是挺常用的，于是记录下备用。
+
+下面简单罗列比较常见的用法：
+
+变换字体大小和颜色
+        String p = "时间";
+        String time = "24:00";
+        mText.setText(Html.fromHtml("<b><small><font color=#ff0000>" + p + "</b><small/><font/>" +
+       "<big>" + time + "</big>"));
+换行、斜体
+      String just = "我是正的";
+      String skew = "我是斜的";
+      mText.setText(Html.fromHtml(just +"<br />"+"<i>"+skew));
+下面是收录的一些TextView可以使用的Html标签，可能会有遗漏(^_^)
+
+标签      说明
+<br>        插入一个换行符。
+<br>        标签是空标签（意味着它没有结束标签，因此这是错误的：<br></br>）
+<p>         定义段落。
+<p>         标签会自动在其前后各添加一个空行
+<h1>        定义最大的标题
+<h2>        ↓
+<h3>        ↓
+<h4>        ↓
+<h5>        ↓
+<h6>        定义最小的标题
+<div>       文档分节
+<strong>    把文本定义为语气更强的强调的内容。TextView中表现为文本加粗
+<b>         文本加粗
+<em>        把文本定义为强调的内容。TextView中表现为斜体文本效果。
+<cite>      定义引用。TextView中表现为斜体文本效果。
+<dfn>       标记那些对特殊术语或短语的定义。TextView中表现为斜体文本效果。
+<i>         显示斜体文本效果。
+<big>       呈现大号字体效果
+<small>     呈现小号字体效果
+<strike>    定义删除线样式的文字
+<font size="..." color="..." face="...">    规定文本的字体、字体尺寸、字体颜色   color：文本颜色；size：文本大小；face：文本字体
+<blockquote>    将<blockquote> 与 </blockquote> 之间的文本从常规文本中分离出来。
+通常在左、右两边进行缩进，有时使用斜体。
+<tt>        呈现类似打字机或者等宽的文本效果
+<a>         定义超链接。最重要的属性是 href 属性，它指示链接的目标。 href：指示链接的目标
+<u>         为文本添加下划线
+<sup>       定义上标文本
+<sub>       定义下标文本
+<img src="..."> 向网页中嵌入一幅图像。<img>标签并不会在网页中插入图像，而是从网页上链接图像。<img>  标签创建的是被引用图像的占位空间。   src：图像的url；alt：图像的替代文本
+为了向别人、向世界证明自己而努力拼搏，而一旦你真的取得了成绩，才会明白：人无须向别人证明什么，只要你能超越自己。
+		

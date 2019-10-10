@@ -1,0 +1,129 @@
+转载：http://blog.csdn.net/zly921112/article/details/50524852
+转载：http://blog.csdn.net/xiaanming/article/details/17483273
+示例：video项目 > robot.app.view.SlideBackLayout
+
+一、Android Scroller原理
+-------------------------------------------
+    一般说到弹性滑动,我们都会想到Scroller这个类,虽然用的非常多但可能平时并未去分析它是如何实现的,而本文先从Scroller平时的使用到源码的角度分析一下Scroller是如何实现.
+
+    1. 先列出Scroller的使用
+        ----------------------------------------------------------------------
+        // 1.构建对象
+        Scroller scroller = new Scroller(context)
+
+        // 2.重写View的computeScroll()方法
+        @Override
+        public void computeScroll() {
+            if(scroller.computeScrollOffset()){
+                scrollTo(scroller.getCurrX(),scroller.getCurrY());
+                invalidate();
+            }
+        }
+
+        // 3.开启Scroller滑动
+        scroller.startScroll(0,0,100,0);
+        invalidate();
+        ----------------------------------------------------------------------
+
+
+    2. 下面再来从源码的角度来分析如何实现弹性滑动的
+        2.1 先看下Scroller的startScroll()源码
+        ------------------------------------------------------------------------------------------
+        public void startScroll(int startX, int startY, int dx, int dy, int mDuration) {
+            mMode = SCROLL_MODE;
+            mFinished = false;
+            mDuration = mDuration;
+            mStartTime = AnimationUtils.currentAnimationTimeMillis();
+            mStartX = startX;
+            mStartY = startY;
+            mFinalX = startX + dx;
+            mFinalY = startY + dy;
+            mDeltaX = dx;
+            mDeltaY = dy;
+            mDurationReciprocal = 1.0f / (float) mDuration;
+        }
+
+        小结: 从上面源码看出其实调用startScroller()时候什么也没做只是记录了一些数值,所以仅仅调用该方法是无法让View滑动的,
+            注意这里的滑动指的是View内容的滑动而非View位置的改变,那么能让view滑动的只剩下invalidate(),invalidate方法会导致view的重绘,
+            而view的draw()方法又会调用computeScroll()方法,computeScroll()方法上面已经实现即获取当前Scroller的scrollX和ScrollY,
+            通过scrollTo()实现滑动并且最后还调用了invalidata()形成递归直到最后滑动结束.
+
+
+        2.2 在看下Scroller的computeScrollOffset()源码
+        ------------------------------------------------------------------------------------------
+        public boolean computeScrollOffset() {
+            ....
+
+            int timePassed = (int)(AnimationUtils.currentAnimationTimeMillis() - mStartTime);
+            if (timePassed < mDuration) {
+                switch (mMode) {
+                case SCROLL_MODE:
+                    final float offsetX = mInterpolator.getInterpolation(timePassed * mDurationReciprocal);
+                    mCurrX = mStartX + Math.round(offsetX * mDeltaX);
+                    mCurrY = mStartY + Math.round(offsetX * mDeltaY);
+                    break;
+
+                    ....
+                }
+
+                ....
+                return true;
+            }
+        }
+
+        小结: 这里只截取了有用的一部分,先看timePassed为当前时间减去刚才startScroll()时候记录的时间mStartTime得出当前调用computeScrollOffset()和startScroll()时间间隔,
+            如果小于duration继续往下,根据时间间隔占duration的百分比计算当前应滑动到的位置,每次滑动会有一个小的时间间隔,
+            再在computeScroll()实现方法中scrollTo(scroller.getCurrX(),scroller.getCurrY())实现View每次的小幅度滑动来实现弹性滑动,
+            而computeScrollOffset()的返回值ture代表滑动未执行完,false反之.
+
+
+二、Android VelocityTracker 简介
+转载：http://blog.csdn.net/centralperk/article/details/8675807
+--------------------------------------------------------------
+    android.view.VelocityTracker主要用跟踪触摸屏事件（flinging事件和其他gestures手势事件）的速率。
+    用addMovement(MotionEvent)函数将Motion event加入到VelocityTracker类实例中，
+    你可以使用getXVelocity() 或getXVelocity()获得横向和竖向的速率到速率时，
+    但是使用它们之前请先调用computeCurrentVelocity(int)来初始化速率的单位 。
+
+
+    主要函数
+    -----------------------------------------------------------
+    Public Methods
+    void	addMovement(MotionEvent event)  Add a user's movement to the tracker.
+    void	clear()     Reset the velocity tracker back to its initial state.
+    void	computeCurrentVelocity(int units, float maxVelocity)    Compute the current velocity based on the points that have been collected.
+            int unitis表示速率的基本时间单位。unitis值为1的表示是，一毫秒时间单位内运动了多少个像素， unitis值为1000表示一秒（1000毫秒）时间单位内运动了多少个像素
+    floatVelocity表示速率的最大值
+    void	computeCurrentVelocity(int units)   Equivalent to invoking computeCurrentVelocity(int, float) with a maximum velocity of Float.MAX_VALUE.
+    abstract T	getNextPoolable()
+    float	getXVelocity()  Retrieve the last computed X velocity.
+    float	getXVelocity(int id)    Retrieve the last computed X velocity.
+    float	getYVelocity(int id)    Retrieve the last computed Y velocity.
+    float	getYVelocity()          Retrieve the last computed Y velocity.
+    abstract boolean	isPooled()
+    static VelocityTracker	obtain()    Retrieve a new VelocityTracker object to watch the velocity of a motion.
+    void	recycle()                   Return a VelocityTracker object back to be re-used by others.
+    abstract void	setNextPoolable(T element)
+    abstract void	setPooled(boolean isPooled)
+
+
+    示例：
+    -----------------------------------------------------------
+    private VelocityTracker mVelocityTracker;//生命变量
+    //在onTouchEvent(MotionEvent ev)中
+    if (mVelocityTracker == null) {
+        mVelocityTracker = VelocityTracker.obtain();//获得VelocityTracker类实例
+    }
+    mVelocityTracker.addMovement(ev);//将事件加入到VelocityTracker类实例中
+    //判断当ev事件是MotionEvent.ACTION_UP时：计算速率
+    final VelocityTracker velocityTracker = mVelocityTracker;
+    // 1000 provides pixels per second
+    velocityTracker.computeCurrentVelocity(1, (float)0.01); //设置maxVelocity值为0.1时，速率大于0.01时，显示的速率都是0.01,速率小于0.01时，显示正常
+    Log.i("test","velocityTraker"+velocityTracker.getXVelocity());
+    velocityTracker.computeCurrentVelocity(1000); //设置units的值为1000，意思为一秒时间内运动了多少个像素
+    Log.i("test","velocityTraker" + velocityTracker.getXVelocity());
+
+    大体的使用是这样的：
+    当你需要跟踪触摸屏事件的速度的时候,使用obtain()方法来获得VelocityTracker类的一个实例对象
+    在onTouchEvent回调函数中，使用addMovement(MotionEvent)函数将当前的移动事件传递给VelocityTracker对象
+    使用computeCurrentVelocity(int units)函数来计算当前的速度，使用 getXVelocity()、 getYVelocity()函数来获得当前的速度
